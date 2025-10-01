@@ -6,7 +6,11 @@ authors = ["robgriffin247 <robgriffin247@hotmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.12,<3.15"
+httpx = "^0.28.1"
+duckdb = "^1.4.0"
+dlt = "^1.17.0"
+streamlit = "^1.50.0"
 
 
 [build-system]
