@@ -1,5 +1,9 @@
 import duckdb
+import streamlit as st
 
-if __name__=="__main__":
-    with duckdb.connect("data/raw.duckdb") as con:
-        print(con.sql("select first_name, second_name, total_points,  from fpl_raw.elements where can_select=false"))
+st.set_page_config(layout="wide")
+
+with duckdb.connect("data/analytics.duckdb") as con:
+    stg_players = con.sql("select * from intermediate.int_players").pl()
+
+st.dataframe(stg_players)

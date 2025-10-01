@@ -12,6 +12,7 @@ duckdb = "^1.4.0"
 dlt = "^1.17.0"
 streamlit = "^1.50.0"
 polars = "^1.33.1"
+dbt-duckdb = "^1.9.6"
 
 
 [build-system]
