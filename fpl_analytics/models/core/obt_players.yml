@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: obt_players
+    description: Players
+    tags: ["core"]

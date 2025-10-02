@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: stg_positions
+    description: Positions
+    tags: ["stg"]

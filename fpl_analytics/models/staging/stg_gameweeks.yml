@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: stg_gameweeks
+    description: Gameweeks
+    tags: ["stg"]

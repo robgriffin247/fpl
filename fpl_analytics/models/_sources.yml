@@ -2,22 +2,17 @@ version: 2
 
 sources:
   - name: raw
-    description: "Raw FPL data loaded via dlt"
+    description: Raw FPL data loaded via dlt and identified as useful
     database: rawdb
     schema: fpl
     tables:
       - name: elements
-        description: "Player data including stats, pricing, and ownership"
-      - name: element_types
-        description: "Position types (GKP, DEF, MID, FWD)"
+        description: Players
       - name: element_stats
-        description: "Metadata about available player statistics"
-      - name: phases
-        description: "Season phases (months)"
-      - name: teams
-        description: "Premier League team information"
+        description: Stat labels
+      - name: element_types
+        description: Positions
       - name: events
-        description: "Gameweek information and deadlines"
-
-        version: 2
-
+        description: Gameweeks
+      - name: teams
+        description: Teams

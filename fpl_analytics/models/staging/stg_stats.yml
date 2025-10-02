@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: stg_stats
+    description: Stat descriptions
+    tags: ["untagged"]
