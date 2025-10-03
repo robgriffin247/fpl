@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: fact_fixtures
+    description: DESCRIPTION
+    tags: ["untagged"]

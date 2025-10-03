@@ -1,7 +1,7 @@
 with 
 source as (
     select *
-    from {{ source("raw", "elements") }}
+    from {{ source("fpl", "elements") }}
 ),
 
 remove_non_selectables as (

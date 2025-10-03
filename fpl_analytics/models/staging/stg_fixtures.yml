@@ -1,0 +1,6 @@
+version: 2
+
+models:
+  - name: stg_fixtures
+    description: Fixtures
+    tags: ["football_data", "stg"]

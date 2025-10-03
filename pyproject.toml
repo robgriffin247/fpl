@@ -13,6 +13,9 @@ dlt = "^1.17.0"
 streamlit = "^1.50.0"
 polars = "^1.33.1"
 dbt-duckdb = "^1.9.6"
+dotenv = "^0.9.9"
+plotly = "^6.3.0"
+emoji = "^2.15.0"
 
 
 [build-system]

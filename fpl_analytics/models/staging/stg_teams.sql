@@ -9,7 +9,7 @@ source as (
         strength_defence_home::int as team_strength_home_defence,
         strength_attack_away::int as team_strength_away_attack,
         strength_defence_away::int as team_strength_away_defence
-    from {{ source("raw", "teams") }}
+    from {{ source("fpl", "teams") }}
 )
 
 select * from source

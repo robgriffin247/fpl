@@ -1,7 +1,7 @@
 version: 2
 
 sources:
-  - name: raw
+  - name: fpl
     description: Raw FPL data loaded via dlt and identified as useful
     database: rawdb
     schema: fpl
@@ -16,3 +16,10 @@ sources:
         description: Gameweeks
       - name: teams
         description: Teams
+  - name: football_data
+    description: Raw FPL data loaded via dlt and identified as useful
+    database: rawdb
+    schema: football_data
+    tables:
+      - name: fixtures
+        description: Fixtures

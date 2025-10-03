@@ -4,7 +4,7 @@ import httpx
 
 @dlt.resource(
     name="fpl_data",
-    write_disposition="append"
+    write_disposition="replace"
 )
 def get_data():
     url = "https://fantasy.premierleague.com/api/bootstrap-static/"

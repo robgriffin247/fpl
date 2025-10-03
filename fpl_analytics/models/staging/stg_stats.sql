@@ -1,7 +1,7 @@
 with 
 source as (
     select *
-    from {{ source("raw", "element_stats") }}
+    from {{ source("fpl", "element_stats") }}
 )
 
 select * from source

@@ -2,5 +2,5 @@ version: 2
 
 models:
   - name: int_gameweeks
-    description: Gameweeks
-    tags: ["int"]
+    description: DESCRIPTION
+    tags: ["untagged"]
