@@ -19,7 +19,7 @@ with duckdb.connect("data/analytics.duckdb") as con:
 
 
 options_metrics = {
-    "Form":"current_form",
+    # "Form":"current_form",
     "Points":"total_points",
     "Points/90":"points_per_90",
     "Points/GW":"points_per_gameweek",
@@ -69,7 +69,7 @@ def display_players(df):
     df = df.with_columns(
         pl.col("biases").map_elements(lambda x: emoji.emojize(x, language="alias"))
     )
-    output = st.dataframe(df[["display_name", "cost", "minutes_played_per_gameweek", "biases", options_metrics.get(st.session_state["selected_metric"])]], column_config={
+    output = st.dataframe(df[["display_name", "cost", "current_form", "minutes_played_per_gameweek", "biases", options_metrics.get(st.session_state["selected_metric"])]], column_config={
         "display_name": st.column_config.TextColumn("Player", width="medium"),
         "team_abbreviation": st.column_config.TextColumn("Team", width="small"),
         "biases": st.column_config.TextColumn("Def/Att Prospects"),
