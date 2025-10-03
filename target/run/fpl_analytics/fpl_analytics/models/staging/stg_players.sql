@@ -11,6 +11,7 @@
 source as (
     select *
     from "rawdb"."fpl"."elements"
+    where _dlt_load_id = (select max(_dlt_load_id) from "rawdb"."fpl"."elements")
 ),
 
 remove_non_selectables as (
