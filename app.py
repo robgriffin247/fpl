@@ -15,11 +15,16 @@ with duckdb.connect("data/analytics.duckdb") as con:
     obt_players = con.sql("select * from core.obt_players").pl()
     options_position = obt_players[["position", "position_id"]].unique().sort("position_id")["position"].to_list()
     options_availability = obt_players["availability_status"].unique().sort().to_list()
+    options_cost = [min(obt_players["cost"].unique().to_list()), max(obt_players["cost"].unique().to_list())]
     options_minutes_per_gameweek = [min(obt_players["minutes_played_per_gameweek"].unique().to_list()), max(obt_players["minutes_played_per_gameweek"].unique().to_list())]
+    options_points_per_gameweek = [min(obt_players["points_per_gameweek"].unique().to_list()), max(obt_players["points_per_gameweek"].unique().to_list())]
+    options_attacking_biases_value = [min(obt_players["attacking_biases_value"].unique().to_list()), max(obt_players["attacking_biases_value"].unique().to_list())]
+    options_defending_biases_value = [min(obt_players["defending_biases_value"].unique().to_list()), max(obt_players["defending_biases_value"].unique().to_list())]
 
 
 options_metrics = {
-    # "Form":"current_form",
+    "Attacking Prospects":"attacking_biases_value",
+    "Defending Prospects":"defending_biases_value",
     "Points":"total_points",
     "Points/90":"points_per_90",
     "Points/GW":"points_per_gameweek",
@@ -34,16 +39,21 @@ options_metrics = {
     "Assists/90":"goals_assisted_per_90",
     "xA":"expected_goals_assisted",
     "A/xA":"goals_assisted_xdifferential",
-    "Attacking Prospects":"attacking_biases_value",
-    "Defending Prospects":"defending_biases_value",
     }
 
-c1, c2, c3, c4 = st.columns(4, gap="large")
+c1, c2, c3 = st.columns([2,2,1], gap="large")
 
-c1.selectbox("Positions(s)", index=3, options=options_position, key="selected_position")
-c2.multiselect("Availability", options=options_availability, key="selected_availability", default="Available")
-c3.slider("Minutes/Gameweek", value=options_minutes_per_gameweek, key="selected_minutes_per_gameweek", step=1, max_value=90)
-c4.selectbox("Metric", options=options_metrics.keys(), key="selected_metric")
+#c1.selectbox("Positions(s)", index=3, options=options_position, key="selected_position")
+c1.multiselect("Positions(s)", options=options_position, key="selected_position", placeholder="All (if none selected)")
+c2.multiselect("Availability", options=options_availability, key="selected_availability", default="Available", placeholder="All (if none selected)")
+
+c1, c2, c3, c4, c5 = st.columns(5, gap="large")
+c1.slider("Cost", value=options_cost, key="selected_cost", step=0.1, min_value=options_cost[0], max_value=options_cost[1])
+c2.slider("Minutes/Gameweek", value=options_minutes_per_gameweek, key="selected_minutes_per_gameweek", step=1, max_value=90)
+c3.slider("Pts/Gameweek", value=options_points_per_gameweek, key="selected_points_per_gameweek", step=0.1)
+c4.slider("Att. Prospects", value=options_attacking_biases_value, key="selected_attacking_biases_value", step=10.0)
+c5.slider("Def. Prospects", value=options_defending_biases_value, key="selected_defending_biases_value", step=10.0)
+#c4.selectbox("Metric", options=options_metrics.keys(), key="selected_metric")
 
 with duckdb.connect("data/analytics.duckdb") as con:
     selected_players = con.sql(f"""
@@ -52,57 +62,67 @@ with duckdb.connect("data/analytics.duckdb") as con:
             select *
             from core.obt_players
             where
-                position = '{st.session_state["selected_position"]}'
+                position in ('{"','".join(st.session_state["selected_position"]) if len(st.session_state["selected_position"])>0 else "','".join(options_position)}')
                 and availability_status in ('{"','".join(st.session_state["selected_availability"]) if len(st.session_state["selected_availability"])>0 else "','".join(options_availability)}')
-                and minutes_played_per_gameweek >= {st.session_state["selected_minutes_per_gameweek"][0]} and cost <= {st.session_state["selected_minutes_per_gameweek"][1]}
-                and {options_metrics.get(st.session_state["selected_metric"])} is not null
+                and cost >= {st.session_state["selected_cost"][0]} and cost <= {st.session_state["selected_cost"][1]}
+                and minutes_played_per_gameweek >= {st.session_state["selected_minutes_per_gameweek"][0]} and minutes_played_per_gameweek <= {st.session_state["selected_minutes_per_gameweek"][1]}
+                and points_per_gameweek >= {st.session_state["selected_points_per_gameweek"][0]} and points_per_gameweek <= {st.session_state["selected_points_per_gameweek"][1]}
+                and attacking_biases_value >= {st.session_state["selected_attacking_biases_value"][0]} and attacking_biases_value <= {st.session_state["selected_attacking_biases_value"][1]}
+                and defending_biases_value >= {st.session_state["selected_defending_biases_value"][0]} and defending_biases_value <= {st.session_state["selected_defending_biases_value"][1]}
         )
-        select * from source order by cost_category, {options_metrics.get(st.session_state["selected_metric"])} desc
+        select * from source order by points_per_gameweek desc
         """).pl()
+                # and {options_metrics.get(st.session_state["selected_metric"])} is not null
+        # select * from source order by cost_category, {options_metrics.get(st.session_state["selected_metric"])} desc
 
-budget_players = selected_players.filter(pl.col("cost_category")=="Budget")#.head(5)
-midrange_players = selected_players.filter(pl.col("cost_category")=="Mid-Range")#.head(5) 
-premium_players = selected_players.filter(pl.col("cost_category")=="Premium")#.head(5)
+# budget_players = selected_players.filter(pl.col("cost_category")=="Budget")#.head(5)
+# midrange_players = selected_players.filter(pl.col("cost_category")=="Mid-Range")#.head(5) 
+# premium_players = selected_players.filter(pl.col("cost_category")=="Premium")#.head(5)
+
 
 st.markdown("-----")
 def display_players(df):
     df = df.with_columns(
         pl.col("biases").map_elements(lambda x: emoji.emojize(x, language="alias"))
     )
-    output = st.dataframe(df[["display_name", "cost", "current_form", "minutes_played_per_gameweek", "biases", options_metrics.get(st.session_state["selected_metric"])]], column_config={
-        "display_name": st.column_config.TextColumn("Player", width="medium"),
-        "team_abbreviation": st.column_config.TextColumn("Team", width="small"),
-        "biases": st.column_config.TextColumn("Def/Att Prospects"),
-        "cost": st.column_config.NumberColumn("Cost", format="£%.1fM", width="small"),
-        "current_form": st.column_config.NumberColumn("Form", format="%.1f", width="small"),
-        "total_points": st.column_config.NumberColumn("Pts", format="%.0f", width="small"),
-        "points_per_90": st.column_config.NumberColumn("Pts/90", format="%.2f", width="small"),
-        "points_per_gameweek": st.column_config.NumberColumn("Pts/GW", format="%.2f", width="small"),
-        "points_per_million": st.column_config.NumberColumn("Pts/£M", format="%.2f", width="small"),
-        "minutes_played": st.column_config.NumberColumn("Mins", format="%.0f", width="small"),
-        "minutes_played_per_gameweek": st.column_config.NumberColumn("Mins/GW", format="%.1f", width="small"),
-        "starts": st.column_config.NumberColumn("Starts", format="%.0f", width="small"),
-        "dreamteam_appearances": st.column_config.NumberColumn("Apps", format="%.0f", width="small"),
-        "goals_scored": st.column_config.NumberColumn("G", format="%.0f", width="small"),
-        "goals_scored_per_90": st.column_config.NumberColumn("G/90", format="%.2f", width="small"),
-        "expected_goals_scored": st.column_config.NumberColumn("xG", format="%.2f", width="small"),
-        "goals_scored_xdifferential": st.column_config.NumberColumn("G/xG", format="%.2f", width="small"),
-        "goals_assisted": st.column_config.NumberColumn("A", format="%.0f", width="small"),
-        "goals_assisted_per_90": st.column_config.NumberColumn("A/90", format="%.2f", width="small"),
-        "expected_goals_assisted": st.column_config.NumberColumn("xA", format="%.2f", width="small"),
-        "goals_assisted_xdifferential": st.column_config.NumberColumn("A/xA", format="%.2f", width="small"),
-        "attacking_biases_value": st.column_config.NumberColumn("Prospects", format="%.1f", width="small"),
-        "defending_biases_value": st.column_config.NumberColumn("Prospects", format="%.1f", width="small"),
+    #output = st.dataframe(df[["display_name", "cost", "current_form", "minutes_played_per_gameweek", "biases", options_metrics.get(st.session_state["selected_metric"])]], column_config={
+    output = st.dataframe(df[["display_name", "cost", "current_form", "minutes_played_per_gameweek", "opponent_abbreviations", "biases"] + list(options_metrics.values())], column_config={
+        "display_name": st.column_config.TextColumn("Player"),
+        "team_abbreviation": st.column_config.TextColumn("Team"),
+        "opponent_abbreviations": st.column_config.TextColumn("Fixtures"),
+        "biases": st.column_config.TextColumn("D/A Prospects"),
+        "cost": st.column_config.NumberColumn("Cost", format="%.1f"),
+        "current_form": st.column_config.NumberColumn("Form", format="%.1f"),
+        "total_points": st.column_config.NumberColumn("Pts", format="%.0f"),
+        "points_per_90": st.column_config.NumberColumn("Pts/90", format="%.1f"),
+        "points_per_gameweek": st.column_config.NumberColumn("Pts/GW", format="%.1f"),
+        "points_per_million": st.column_config.NumberColumn("Pts/£M", format="%.1f"),
+        "minutes_played": st.column_config.NumberColumn("Mins", format="%.0f"),
+        "minutes_played_per_gameweek": st.column_config.NumberColumn("Mins/GW", format="%.0f"),
+        "starts": st.column_config.NumberColumn("Starts", format="%.0f"),
+        "dreamteam_appearances": st.column_config.NumberColumn("Apps", format="%.0f"),
+        "goals_scored": st.column_config.NumberColumn("G", format="%.0f"),
+        "goals_scored_per_90": st.column_config.NumberColumn("G/90", format="%.2f"),
+        "expected_goals_scored": st.column_config.NumberColumn("xG", format="%.2f"),
+        "goals_scored_xdifferential": st.column_config.NumberColumn("G/xG", format="%.2f"),
+        "goals_assisted": st.column_config.NumberColumn("A", format="%.0f"),
+        "goals_assisted_per_90": st.column_config.NumberColumn("A/90", format="%.2f"),
+        "expected_goals_assisted": st.column_config.NumberColumn("xA", format="%.2f"),
+        "goals_assisted_xdifferential": st.column_config.NumberColumn("A/xA", format="%.2f"),
+        "attacking_biases_value": st.column_config.NumberColumn("A Pr.", format="%.1f"),
+        "defending_biases_value": st.column_config.NumberColumn("D Pr.", format="%.1f"),
      })
 
-c1, c2, c3 = st.columns(3)
+# c1, c2, c3 = st.columns(3)
 
-with c1:
-    st.markdown("##### Budget Players")
-    display_players(budget_players)
-with c2:
-    st.markdown("##### Mid-Range Players")
-    display_players(midrange_players)
-with c3:
-    st.markdown("##### Premium Players")
-    display_players(premium_players)
+# with c1:
+#     st.markdown("##### Budget Players")
+#     display_players(budget_players)
+# with c2:
+#     st.markdown("##### Mid-Range Players")
+#     display_players(midrange_players)
+# with c3:
+#     st.markdown("##### Premium Players")
+#     display_players(premium_players)
+
+display_players(selected_players)

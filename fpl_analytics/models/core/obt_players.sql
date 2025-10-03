@@ -51,6 +51,7 @@ filter_fixtures as (
 aggregate_fixtures as (
     select
         team_abbreviation,
+        listagg(opponent_abbreviation, ' - ') over (partition by team_abbreviation order by gameweek) as opponent_abbreviations,
         (sum(attacking_bias) over (partition by team_abbreviation order by gameweek)) / 3 as attacking_biases_value,
         (sum(defending_bias) over (partition by team_abbreviation order by gameweek)) / 3 as defending_biases_value,
         listagg(attacking_bias_icon, '') over (partition by team_abbreviation order by gameweek) as attacking_biases,
@@ -66,6 +67,7 @@ join_to_players as (
         teams.team,
         teams.team_abbreviation,
         positions.position,
+        aggregate_fixtures.opponent_abbreviations,
         aggregate_fixtures.attacking_biases_value,
         aggregate_fixtures.defending_biases_value,
         aggregate_fixtures.defending_biases || '/' || aggregate_fixtures.attacking_biases as biases,
@@ -83,6 +85,7 @@ select_cols as (
         team_id,
         team,
         team_abbreviation,
+        opponent_abbreviations,
         attacking_biases_value,
         defending_biases_value,
         biases,
